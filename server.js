@@ -17,11 +17,9 @@ const io = socketIo(server, {
   }
 });
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/messages', messageRoutes);
 
@@ -30,7 +28,6 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/chat-app'
   useUnifiedTopology: true,
 });
 
-// Socket.io for real-time messaging
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
@@ -41,7 +38,7 @@ io.on('connection', (socket) => {
 
   socket.on('send_message', async (data) => {
     try {
-      // Save message to database
+  
       const Message = require('./models/Message');
       const newMessage = new Message({
         roomId: data.roomId,
@@ -49,11 +46,9 @@ io.on('connection', (socket) => {
         text: data.text,
       });
       await newMessage.save();
-      
-      // Populate sender info
+
       await newMessage.populate('sender', 'username');
-      
-      // Broadcast to room
+
       io.to(data.roomId).emit('receive_message', newMessage);
     } catch (error) {
       console.error('Error sending message:', error);
